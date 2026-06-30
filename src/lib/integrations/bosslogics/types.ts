@@ -1,0 +1,58 @@
+export type BossLogicsRawRecord = Record<string, unknown>;
+
+export type BossLogicsProduct = {
+  bossId: string;
+  division?: string;
+  classification?: string;
+  collection?: string;
+  collectionCopy?: string;
+  styleCode?: string;
+  siblingCode?: string;
+  sku?: string;
+  upc?: string;
+  launchYear?: string;
+  launchDate?: string;
+  name: string;
+  description?: string;
+  origin?: string;
+  pdpUrlAvailable?: string;
+  priceUsd?: string;
+  priceHkd?: string;
+  priceCad?: string;
+  priceNzd?: string;
+  metalCode?: string;
+  metalLabel?: string;
+  diamondWeight?: string;
+  size?: string;
+  claspType?: string;
+  retailer?: string;
+  retailerCode?: string;
+  stock?: string;
+  image?: string;
+  imageAlt1?: string;
+  imageAlt2?: string;
+  imageAlt3?: string;
+  imageAlt4?: string;
+  imageOnModel?: string;
+  video?: string;
+  videoOm?: string;
+  raw: BossLogicsRawRecord;
+};
+
+export type NormalizedProduct = {
+  externalId: string;
+  title: string;
+  descriptionHtml: string;
+  sku: string | null;
+  barcode: string | null;
+  price: string | null;
+  vendor: string;
+  productType: string | null;
+  status: "ACTIVE" | "DRAFT" | "ARCHIVED";
+  inStock: boolean;
+  stockRaw: string | null;
+  tags: string[];
+  imageUrls: string[];
+  metafields: Array<{ namespace: string; key: string; type: string; value: string }>;
+  source: BossLogicsProduct;
+};

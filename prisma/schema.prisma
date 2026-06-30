@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SyncRunStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+enum SyncRunMode {
+  DRY_RUN
+  APPLY
+}
+
+enum ProductSyncStatus {
+  NEW
+  SYNCED
+  OUT_OF_STOCK
+  MISSING
+  ARCHIVED
+  FAILED
+  SKIPPED
+}
+
+enum LogLevel {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+  SUCCESS
+}
+
+model ProductRecord {
+  id               String            @id @default(uuid())
+  bossId           String            @unique
+  sku              String?
+  upc              String?
+  title            String
+  vendor           String            @default("David Yurman")
+  productType      String?
+  priceUsd         Decimal?          @db.Decimal(12, 2)
+  inStock          Boolean           @default(false)
+  stockRaw         String?
+  imageUrl         String?
+  shopifyProductId String?
+  shopifyHandle    String?
+  shopifyStatus    String?
+  syncStatus       ProductSyncStatus @default(NEW)
+  missingSince     DateTime?
+  lastSeenAt       DateTime?
+  lastSyncedAt     DateTime?
+  lastError        String?
+  tags             String[]          @default([])
+  raw              Json?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  events           SyncEvent[]
+  media            ProductMedia[]
+
+  @@index([vendor])
+  @@index([sku])
+  @@index([upc])
+  @@index([shopifyProductId])
+  @@index([syncStatus])
+  @@index([inStock])
+  @@index([lastSeenAt])
+}
+
+model ProductMedia {
+  id               String        @id @default(uuid())
+  productRecordId  String
+  sourceUrl        String
+  shopifyMediaId   String?
+  status           String        @default("PENDING")
+  lastError        String?
+  lastSyncedAt     DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  productRecord    ProductRecord @relation(fields: [productRecordId], references: [id], onDelete: Cascade)
+
+  @@unique([productRecordId, sourceUrl])
+  @@index([shopifyMediaId])
+}
+
+model SyncRun {
+  id               String        @id @default(uuid())
+  mode             SyncRunMode
+  status           SyncRunStatus @default(PENDING)
+  triggeredBy      String        @default("manual")
+  startedAt        DateTime?
+  finishedAt       DateTime?
+  totalRaw         Int           @default(0)
+  totalEligible    Int           @default(0)
+  createdCount     Int           @default(0)
+  updatedCount     Int           @default(0)
+  archivedCount    Int           @default(0)
+  skippedCount     Int           @default(0)
+  failedCount      Int           @default(0)
+  missingCount     Int           @default(0)
+  outOfStockCount  Int           @default(0)
+  message          String?
+  options          Json?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  events           SyncEvent[]
+
+  @@index([createdAt])
+  @@index([status])
+  @@index([mode])
+}
+
+model SyncEvent {
+  id               String         @id @default(uuid())
+  syncRunId        String
+  productRecordId  String?
+  level            LogLevel       @default(INFO)
+  eventType        String
+  message          String
+  data             Json?
+  createdAt        DateTime       @default(now())
+
+  syncRun          SyncRun        @relation(fields: [syncRunId], references: [id], onDelete: Cascade)
+  productRecord    ProductRecord? @relation(fields: [productRecordId], references: [id], onDelete: SetNull)
+
+  @@index([syncRunId, createdAt])
+  @@index([productRecordId])
+  @@index([level])
+}
+
+model AppSetting {
+  key        String   @id
+  value      Json
+  updatedAt  DateTime @updatedAt
+  createdAt  DateTime @default(now())
+}
