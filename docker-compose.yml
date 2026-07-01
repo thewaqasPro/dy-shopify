@@ -46,7 +46,7 @@ services:
     environment:
       POSTGRES_DB: dy_inventory
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ib8j8UP7RNet
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
